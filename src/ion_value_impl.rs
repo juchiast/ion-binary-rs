@@ -302,14 +302,7 @@ impl TryFrom<IonValue> for serde_json::Value {
                 Ok(Value::from(json_number))
             }
             IonValue::BigInteger(value) => Ok(Value::Number(i64::try_from(value)?.into())),
-            ion_value @ IonValue::Decimal(_) => {
-                let number = f64::try_from(ion_value)?;
-
-                let json_number = serde_json::Number::from_f64(number)
-                    .ok_or(IonParserError::DecimalNotANumericValue(number))?;
-
-                Ok(Value::Number(json_number))
-            }
+            IonValue::Decimal(d) => Ok(Value::String(d.to_string())),
             IonValue::Float(value) => {
                 let json_number = serde_json::Number::from_f64(value)
                     .ok_or(IonParserError::DecimalNotANumericValue(value))?;
@@ -331,6 +324,7 @@ impl TryFrom<IonValue> for serde_json::Value {
                 }
                 Ok(Value::Object(result_map))
             }
+            IonValue::DateTime(d) => Ok(Value::String(d.to_rfc3339())),
             _ => Err(IonParserError::TypeNotSupported(value)),
         }
     }
